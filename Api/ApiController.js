@@ -3,6 +3,7 @@ const router = express.Router();
 const DataBase = require('../Db/fakeDb');
 const cron = require('node-cron');
 
+// Função para pegar o próximo usuário na fila
 const processNextUser = () => {
     const job = DataBase.users.find(user => !user.inQueue);
     if (job) {
@@ -13,6 +14,7 @@ const processNextUser = () => {
     }
 };
 
+// Agendamento periódico para processar usuários na fila
 cron.schedule('* * * * *', () => {
     const user = processNextUser();
     if (user) {
@@ -22,10 +24,12 @@ cron.schedule('* * * * *', () => {
     }
 });
 
+// Rota para obter informações do banco de dados
 router.get('/', (req, res) => {
     res.json(DataBase);
 });
 
+// Rota para obter informações de um usuário específico
 router.get("/user/:id",  (req, res) => {
     if (isNaN(req.params.id)) {
         res.sendStatus(400);
@@ -40,6 +44,7 @@ router.get("/user/:id",  (req, res) => {
     }
 });
 
+// Rota para criar um novo usuário
 router.post('/CriarUser', (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
@@ -53,6 +58,7 @@ router.post('/CriarUser', (req, res) => {
     }
 });
 
+// Rota para adicionar um usuário à fila de processamento
 router.post('/addNaFila/:id', async (req, res) => {
     let id = parseInt(req.params.id);
     let User = DataBase.users.find(Users => Users.id == id);
@@ -63,6 +69,8 @@ router.post('/addNaFila/:id', async (req, res) => {
         res.sendStatus(404); 
     }
 });
+
+// Rota para processar o próximo usuário na fila
 router.get('/processarProximo', (req, res) => {
     const user = processNextUser();
     if (user) {
