@@ -4,6 +4,18 @@ const DataBase = require('../Db/fakeDb');
 const { Queue, Worker } = require('bull');
 const userQueue = new Queue('usersQueue');
 
+const processNextUser = async (job) => {
+    const userId = job.data.id;
+    let User = DataBase.users.find(Users => Users.id == userId);
+
+    if (User !== undefined) {
+        return User;
+    } else {
+        throw new Error('Usuário não encontrado');
+    }
+};
+
+const worker = new Worker('usersQueue', processNextUser);
 
 router.get('/', (req, res) => {
     res.json(DataBase);
@@ -48,6 +60,7 @@ router.post('/addNaFila/:id', async (req, res) => {
         res.sendStatus(404); 
     }
 });
+
 
 
 
