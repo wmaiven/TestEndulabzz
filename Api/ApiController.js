@@ -13,7 +13,6 @@ const processNextUser = () => {
     }
 };
 
-// Agendar a execução a cada minuto (você pode ajustar o cron conforme necessário)
 cron.schedule('* * * * *', () => {
     const user = processNextUser();
     if (user) {
@@ -34,8 +33,7 @@ router.get("/user/:id",  (req, res) => {
         let id = parseInt(req.params.id);
         let User = DataBase.users.find(Users => Users.id == id);
         if (User != undefined) {
-            res.json(User);
-            res.statusCode = 200;
+            res.status(200).json(User);          
         } else {
             res.sendStatus(404);
         }
@@ -46,18 +44,18 @@ router.post('/CriarUser', (req, res) => {
     let email = req.body.email;
     let password = req.body.password;
     let id = req.body.id;
+
     if(email === undefined || password === undefined || id === undefined || isNaN(id) || isNaN(password)){
-        res.send("dados incorretos").sendStatus(500);
+        res.status(500).send("Dados incorretos");
     } else {
         DataBase.users.push({id:id, email: email, password: password, inQueue: false});
-        res.send("Dados cadastrados").sendStatus(200);   
+        res.sendStatus(200).send("Dados cadastrados");
     }
 });
 
 router.post('/addNaFila/:id', async (req, res) => {
     let id = parseInt(req.params.id);
     let User = DataBase.users.find(Users => Users.id == id);
-
     if (User !== undefined && !User.inQueue) {
         User.inQueue = true;
         res.send("Usuário adicionado à fila").sendStatus(200);
@@ -65,7 +63,6 @@ router.post('/addNaFila/:id', async (req, res) => {
         res.sendStatus(404); 
     }
 });
-
 router.get('/processarProximo', (req, res) => {
     const user = processNextUser();
     if (user) {
