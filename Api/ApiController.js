@@ -49,7 +49,7 @@ router.post('/CriarUser', (req, res) => {
         res.status(500).send("Dados incorretos");
     } else {
         DataBase.users.push({id:id, email: email, password: password, inQueue: false});
-        res.sendStatus(200).send("Dados cadastrados");
+        res.send("Dados cadastrados");
     }
 });
 
