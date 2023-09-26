@@ -14,16 +14,13 @@ router.get("/user/:id",  (req, res) => {
         let id = parseInt(req.params.id);
         let User = DataBase.users.find(Users => Users.id == id);
         if (User != undefined) {
-            res.statusCode = 200;
             res.json(User);
+            res.statusCode = 200;
         } else {
             res.sendStatus(404);
         }
     }
 });
-
-
-
 
 router.post('/CriarUser', (req, res) => {
     let email = req.body.email;
