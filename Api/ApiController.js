@@ -1,6 +1,8 @@
 const express = require('express'); 
 const router = express.Router();
 const DataBase = require('../Db/fakeDb');
+const { Queue, Worker } = require('bull');
+const userQueue = new Queue('usersQueue');
 
 
 router.get('/', (req, res) => {
@@ -33,6 +35,20 @@ router.post('/CriarUser', (req, res) => {
         res.send("Dados cadastrados").sendStatus(200);   
     }
 });
+
+router.post('/addNaFila/:id', async (req, res) => {
+    let id = parseInt(req.params.id);
+    let User = DataBase.users.find(Users => Users.id == id);
+
+    if (User !== undefined && !User.inQueue) {
+        await userQueue.add({ id: id });
+        User.inQueue = true;
+        res.send("Usuário adicionado à fila").sendStatus(200);
+    } else {
+        res.sendStatus(404); 
+    }
+});
+
 
 
 module.exports = router;
