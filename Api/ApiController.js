@@ -1,35 +1,27 @@
 const express = require('express'); 
 const router = express.Router();
 const DataBase = require('../Db/fakeDb');
-const { Worker, Queue, QueueScheduler } = require('node-resque');
+const cron = require('node-cron');
 
-const connectionDetails = {
-  pkg: 'ioredis',
-  host: '127.0.0.1',
-  password: '',
-  port: 6380,
-  database: 0,
-};
-
-const jobs = {
-  processNextUser: {
-    perform: async (job) => {
-      const userId = job.data.id;
-      let User = DataBase.users.find(Users => Users.id == userId);
-
-      if (User !== undefined) {
-        return User;
-      } else {
-        throw new Error('Usuário não encontrado');
-      }
+const processNextUser = () => {
+    const job = DataBase.users.find(user => !user.inQueue);
+    if (job) {
+        job.inQueue = true;
+        return job;
+    } else {
+        return null;
     }
-  }
 };
 
-const worker = new Worker({ connection: connectionDetails, queues: ['usersQueue'] }, jobs);
-const queueScheduler = new QueueScheduler({ connection: connectionDetails });
-
-const userQueue = new Queue('usersQueue', { connection: connectionDetails });
+// Agendar a execução a cada minuto (você pode ajustar o cron conforme necessário)
+cron.schedule('* * * * *', () => {
+    const user = processNextUser();
+    if (user) {
+        console.log(`Processando usuário: ${user.id}`);
+    } else {
+        console.log('Nenhum usuário na fila');
+    }
+});
 
 router.get('/', (req, res) => {
     res.json(DataBase);
@@ -56,8 +48,8 @@ router.post('/CriarUser', (req, res) => {
     let id = req.body.id;
     if(email === undefined || password === undefined || id === undefined || isNaN(id) || isNaN(password)){
         res.send("dados incorretos").sendStatus(500);
-    }else{
-        DataBase.users.push({id:id, email: email, password: password});
+    } else {
+        DataBase.users.push({id:id, email: email, password: password, inQueue: false});
         res.send("Dados cadastrados").sendStatus(200);   
     }
 });
@@ -67,7 +59,6 @@ router.post('/addNaFila/:id', async (req, res) => {
     let User = DataBase.users.find(Users => Users.id == id);
 
     if (User !== undefined && !User.inQueue) {
-        await userQueue.enqueue('usersQueue', 'processNextUser', { id });
         User.inQueue = true;
         res.send("Usuário adicionado à fila").sendStatus(200);
     } else {
@@ -75,11 +66,10 @@ router.post('/addNaFila/:id', async (req, res) => {
     }
 });
 
-router.get('/processarProximo', async (req, res) => {
-    const job = await userQueue.queued('usersQueue');
-    if (job) {
-        const result = await job.perform();
-        res.json(result);
+router.get('/processarProximo', (req, res) => {
+    const user = processNextUser();
+    if (user) {
+        res.json(user);
     } else {
         res.sendStatus(404); // Nenhum usuário na fila
     }
