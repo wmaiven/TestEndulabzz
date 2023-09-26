@@ -1,21 +1,35 @@
 const express = require('express'); 
 const router = express.Router();
 const DataBase = require('../Db/fakeDb');
-const { Queue, Worker } = require('bull');
-const userQueue = new Queue('usersQueue');
+const { Worker, Queue, QueueScheduler } = require('node-resque');
 
-const processNextUser = async (job) => {
-    const userId = job.data.id;
-    let User = DataBase.users.find(Users => Users.id == userId);
-
-    if (User !== undefined) {
-        return User;
-    } else {
-        throw new Error('Usuário não encontrado');
-    }
+const connectionDetails = {
+  pkg: 'ioredis',
+  host: '127.0.0.1',
+  password: '',
+  port: 6380,
+  database: 0,
 };
 
-const worker = new Worker('usersQueue', processNextUser);
+const jobs = {
+  processNextUser: {
+    perform: async (job) => {
+      const userId = job.data.id;
+      let User = DataBase.users.find(Users => Users.id == userId);
+
+      if (User !== undefined) {
+        return User;
+      } else {
+        throw new Error('Usuário não encontrado');
+      }
+    }
+  }
+};
+
+const worker = new Worker({ connection: connectionDetails, queues: ['usersQueue'] }, jobs);
+const queueScheduler = new QueueScheduler({ connection: connectionDetails });
+
+const userQueue = new Queue('usersQueue', { connection: connectionDetails });
 
 router.get('/', (req, res) => {
     res.json(DataBase);
@@ -53,7 +67,7 @@ router.post('/addNaFila/:id', async (req, res) => {
     let User = DataBase.users.find(Users => Users.id == id);
 
     if (User !== undefined && !User.inQueue) {
-        await userQueue.add({ id: id });
+        await userQueue.enqueue('usersQueue', 'processNextUser', { id });
         User.inQueue = true;
         res.send("Usuário adicionado à fila").sendStatus(200);
     } else {
@@ -61,12 +75,14 @@ router.post('/addNaFila/:id', async (req, res) => {
     }
 });
 
-
-
+router.get('/processarProximo', async (req, res) => {
+    const job = await userQueue.queued('usersQueue');
+    if (job) {
+        const result = await job.perform();
+        res.json(result);
+    } else {
+        res.sendStatus(404); // Nenhum usuário na fila
+    }
+});
 
 module.exports = router;
-
-
-
-
-
