@@ -1,6 +1,4 @@
-Olá, segue entrega do teste solicitado. Desde já agradeço novamente por estar fazendo parte desse processo, 
-foi muito divertido e desafiador esse desafio e como resultado aprendi muitas coisas que antes eu não sabia.
-Tendo dito isso a seguir falarei mais sobre as minhas ideias e o que eu quis fazer.
+
 
 //criar uma Api com express
 A ideia era criar uma requisição get para ver usuarios cadastardos pensando em um possivel adm que poderia acessar.
