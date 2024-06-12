@@ -13,7 +13,3 @@ acabei optando por outra abordagem que foi utilizando o node-cron para cada minu
 //arquitetura de software
 Tentei fazer uma arquitetura mais proxima do MVC possivel, separando as responsabilidades e mantendo o banco de dados os controllers. Visando uma arquitetura limpa sendo possivel a utilizaão em um ambiente real.
 
-//websockets
-Outra funcionalidade que foi minha primeira vez, e agradeço muito por esse aprendizado acredito que websockets tem muita utilidades em varios quesitos como chats perfeita para uma resposta imediata, utilizei o ws para configurar ele loga uma mensagem quando uma nova conexão é feita e quando uma mensagem é recebida, ele a loga e envia uma resposta de volta para o cliente WebSocket. 
-
-obs: Utilizei o chatgpt em alguns pontos para ter uma inspirações do que fazer e adaptei e corrigi para as minhas necessidades como também o utilizei para comentar o codigo poupando tempo. 
